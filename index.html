@@ -7,6 +7,12 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
+:root{
+  /* uniforme rijhoogte – makkelijk aan te passen */
+  --row-h-desktop: 34px;
+  --row-h-mobile: 36px;
+}
+
 body {
   margin: 0;
   height: 100vh;
@@ -62,7 +68,7 @@ header img { height: 170px; object-fit: cover; }
 .print-btn { background: #555; color: white; }
 
 #weeks-container { display: flex; flex-wrap: nowrap; }
-table { border-collapse: collapse; background: white; border: 1px solid #000; }
+table { border-collapse: collapse; background: white; border: 1px solid #000; width: auto; }
 th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
 th { background: #eaeaea; }
 .separator-row td { border-bottom: 3px solid black !important; }
@@ -77,6 +83,18 @@ th { background: #eaeaea; }
 td:first-child, th:first-child { width: 80px; }
 td:not(:first-child), th:not(:first-child) { width: 55px; }
 .admin-only { display: none; }
+
+/* ✅ uniforme celhoogte desktop */
+@media (min-width: 769px) {
+  tbody td { height: var(--row-h-desktop); vertical-align: middle; }
+  /* naamkolom niet laten wrappen zodat rijhoogte niet groeit */
+  .name-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+}
 
 /* Mobiel */
 @media (max-width: 768px) {
@@ -116,7 +134,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   table {
     width: 100%;
     min-width: 0;
-    table-layout: fixed;
+    table-layout: fixed;     /* verdeelt kolombreedtes netjes */
     font-size: 0.72rem;
   }
   th, td { padding: 2px; }
@@ -125,6 +143,17 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   td:first-child, th:first-child { width: 26% !important; }
   td:not(:first-child), th:not(:first-child) {
     width: calc((100% - 26%) / 7) !important;
+  }
+
+  /* ✅ uniforme celhoogte mobiel */
+  tbody td { height: var(--row-h-mobile); vertical-align: middle; }
+
+  /* naamkolom niet laten wrappen, wel ellipsis zodat het niet uit beeld duwt */
+  .name-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   /* toon/verberg weken op mobiel */
@@ -523,7 +552,11 @@ function buildWeekTable(e){
  n.appendChild(l);
  const r=document.createElement("tbody");
  names.forEach((t,n)=>{ const c=document.createElement("tr"); 2===n&&c.classList.add("separator-row");
-  const o=document.createElement("td"); o.textContent=t; c.appendChild(o);
+  const o=document.createElement("td"); 
+  o.textContent=t; 
+  o.classList.add("name-cell");     // ✅ uniforme naamkolom
+  o.title = t;                      // tooltip met volledige naam
+  c.appendChild(o);
   a.forEach(t=>{ const n=document.createElement("td"); n.dataset.date=t.toISOString(); if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) n.classList.add("greyed"); c.appendChild(n); });
   r.appendChild(c);
  });
