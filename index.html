@@ -7,98 +7,284 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-body{display:flex;margin:0;height:100vh}
-#sidebar{width:200px;background:#f4f4f4;border-right:1px solid #ccc;padding:1rem;overflow-y:auto}
-#sidebar button{width:100%;margin-bottom:.5rem}
-#sidebar button.past-block{background:#ddd!important;color:#777!important}
-#main{flex:1;display:flex;flex-direction:column;overflow-x:auto;padding:1rem}
-header{background:#fff;border-bottom:1px solid #ccc;padding:.5rem;height:170px;display:flex;align-items:center}
-header img{height:170px;object-fit:cover}
-.clear-btn{background:black;color:white;font-weight:bold;padding:4px 10px;border:none;cursor:pointer;margin:.5rem 0}
-.save-btn,.print-btn{font-weight:bold;width:100%;padding:10px;border:none;cursor:pointer;margin-top:10px;font-size:1rem}
-.save-btn{background:#007bff;color:white}
-.print-btn{background:#555;color:white}
-#weeks-container{display:flex;flex-wrap:nowrap}
-table{border-collapse:collapse;background:white;border:1px solid #000}
-th,td{border:1px solid #ccc;text-align:center;padding:3px}
-th{background:#eaeaea}
-.separator-row td{border-bottom:3px solid black!important}
-.A{background:red;color:white;font-weight:bold}
-.D{background:yellow;color:black;font-weight:bold}
-.T{background:purple;color:white;font-weight:bold}
-.greyed{background:#f0f0f0;color:#888}
-#save-message{background:#28a745;color:white;padding:8px;margin-top:5px;text-align:center;display:none}
-td:first-child, th:first-child{width:80px}
-td:not(:first-child), th:not(:first-child){width:55px}
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+#sidebar {
+  background: #f4f4f4;
+  border-right: 1px solid #ccc;
+  padding: 1rem;
+  overflow-y: auto;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  transform: translateX(0);
+}
+#sidebar button { width: 100%; margin-bottom: .5rem; }
+#sidebar button.past-block { background: #ddd !important; color: #777 !important; }
+#sidebar.hidden {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+#toggle-sidebar {
+  background: #007bff; color: white; border: none; padding: 0.5rem 1rem; width: 100%;
+}
+#show-sidebar {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  z-index: 20;
+  display: none;
+}
+#main { flex: 1; display: flex; flex-direction: column; overflow-x: auto; padding: 1rem; }
+header {
+  background: #fff; border-bottom: 1px solid #ccc; padding: .5rem;
+  height: 170px; display: flex; align-items: center;
+}
+header img { height: 170px; object-fit: cover; }
+.clear-btn {
+  background: black; color: white; font-weight: bold; padding: 4px 10px;
+  border: none; cursor: pointer; margin: .5rem 0;
+}
+.save-btn, .print-btn {
+  font-weight: bold; width: 100%; padding: 10px; border: none;
+  cursor: pointer; margin-top: 10px; font-size: 1rem;
+}
+.save-btn { background: #007bff; color: white; }
+.print-btn { background: #555; color: white; }
+#weeks-container { display: flex; flex-wrap: nowrap; }
+table { border-collapse: collapse; background: white; border: 1px solid #000; }
+th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
+th { background: #eaeaea; }
+.separator-row td { border-bottom: 3px solid black !important; }
+.A { background: red; color: white; font-weight: bold; }
+.D { background: yellow; color: black; font-weight: bold; }
+.T { background: purple; color: white; font-weight: bold; }
+.greyed { background: #f0f0f0; color: #888; }
+#save-message {
+  background: #28a745; color: white; padding: 8px; margin-top: 5px;
+  text-align: center; display: none;
+}
+td:first-child, th:first-child { width: 80px; }
+td:not(:first-child), th:not(:first-child) { width: 55px; }
+.admin-only { display: none; }
 
-/* Print fix: behoud kleuren */
-@media print{
-  #sidebar,.save-btn,.print-btn,.clear-btn{display:none!important}
-  #main{padding:0}
-  *{
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color-adjust: exact !important;
+/* Mobiel */
+@media (max-width: 768px) {
+  /* voorkom horizontaal schuiven wanneer de sidebar in/uit schuift */
+  body { flex-direction: column; overflow-x: hidden; }
+
+  #sidebar {
+    position: fixed; top: 0; left: 0; height: 100%; width: 180px;
+    z-index: 15; background: #f4f4f4; box-shadow: 2px 0 6px rgba(0,0,0,0.2);
   }
-  .A{background:red !important;color:white !important;}
-  .D{background:yellow !important;color:black !important;}
-  .T{background:purple !important;color:white !important;}
+
+  /* main altijd volle breedte */
+  #main { padding: 0.5rem; width: 100vw; }
+
+  table { font-size: 0.8rem; min-width: 600px; }
+
+  /* agressiever verbergen op mobiel om randjes te voorkomen */
+  #sidebar.hidden {
+    transform: translateX(-105%);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  /* wanneer open via body state */
+  body.sidebar-open #sidebar {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* Donkere laag achter de sidebar (backdrop) */
+  #backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 10; /* onder sidebar, boven content */
+  }
+  body.sidebar-open #backdrop {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
 
-/* PNG fix: blokken compact weergeven */
-.png-block{display:inline-block;vertical-align:top}
+/* Desktop */
+@media (min-width: 769px) {
+  #sidebar {
+    width: 220px;
+    position: relative;
+  }
+}
 
-/* Verberg admin-knoppen standaard */
-.admin-only { display: none; }
+/* Print */
+@media print {
+  #sidebar, #show-sidebar, #toggle-sidebar,
+  .save-btn, .print-btn, .clear-btn, #backdrop { display: none !important; }
+}
 </style>
 </head>
 <body>
-<div id="sidebar"><h3>Weekblokken</h3><div id="week-blocks"></div></div>
+
+<button id="show-sidebar" aria-expanded="false">📂 Sidebar tonen</button>
+<div id="backdrop" aria-hidden="true"></div>
+
+<div id="sidebar" aria-hidden="false">
+  <button id="toggle-sidebar">📂 Sidebar verbergen</button>
+  <h3>Weekblokken</h3>
+  <div id="week-blocks"></div>
+</div>
+
 <div id="main">
 <header><img src="casino-be-one-logo.png" alt="Logo"></header>
-
-<!-- Beheerder login knop -->
 <button class="print-btn" onclick="adminLogin()">🔑 Beheerder login</button>
-
-<!-- Admin-only knoppen -->
 <button id="clear-btn" class="clear-btn admin-only" onclick="clearFutureShifts()">× Clear Toekomst</button>
 <button class="save-btn admin-only" onclick="saveBlockData()">💾 Opslaan</button>
-
 <div id="weeks-container"></div>
-
-<!-- Printknoppen per weekpaar -->
 <button class="print-btn" onclick="openPrintWindowRange(0,1,false)">🖨 Print kleur W1–2</button>
 <button class="print-btn" onclick="openPrintWindowRange(0,1,true)">🖨 Print zwart-wit W1–2</button>
 <button class="print-btn" onclick="openPrintWindowRange(2,3,false)">🖨 Print kleur W3–4</button>
 <button class="print-btn" onclick="openPrintWindowRange(2,3,true)">🖨 Print zwart-wit W3–4</button>
-
 <button class="print-btn" onclick="downloadRosterAsPNG()">📸 Download als PNG</button>
 <div id="save-message">Rooster opgeslagen!</div>
 </div>
+
 <script>
-/* Beheerder login met sessie onthouden */
+document.addEventListener("DOMContentLoaded", () => {
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("toggle-sidebar");
+  const showBtn = document.getElementById("show-sidebar");
+  const backdrop = document.getElementById("backdrop");
+
+  function hideSidebar() {
+    sidebar.classList.add("hidden");
+    document.body.classList.remove("sidebar-open");
+    showBtn.style.display = "block";
+    // ARIA
+    showBtn.setAttribute("aria-expanded", "false");
+    sidebar.setAttribute("aria-hidden", "true");
+  }
+  function showSidebar() {
+    sidebar.classList.remove("hidden");
+    document.body.classList.add("sidebar-open");
+    showBtn.style.display = "none";
+    // ARIA
+    showBtn.setAttribute("aria-expanded", "true");
+    sidebar.setAttribute("aria-hidden", "false");
+  }
+
+  // knoppen
+  toggleBtn.addEventListener("click", hideSidebar);
+  showBtn.addEventListener("click", showSidebar);
+
+  // backdrop klik -> sluiten (mobiel)
+  backdrop.addEventListener("click", () => {
+    if (window.innerWidth <= 768) hideSidebar();
+  });
+
+  // buiten klikken -> sluiten (alleen mobiel)
+  document.addEventListener("click", (e) => {
+    if (window.innerWidth <= 768 &&
+        !sidebar.contains(e.target) &&
+        !showBtn.contains(e.target) &&
+        !sidebar.classList.contains("hidden")) {
+      hideSidebar();
+    }
+  });
+
+  // swipe logica
+  let touchStartX = 0, touchEndX = 0;
+  document.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+  });
+  document.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 1) touchEndX = e.touches[0].clientX;
+  });
+  document.addEventListener("touchend", () => {
+    if (window.innerWidth > 768) return;
+    const dist = touchEndX - touchStartX;
+    if (touchStartX < 30 && dist > 50 && sidebar.classList.contains("hidden")) showSidebar();
+    if (dist < -50 && !sidebar.classList.contains("hidden")) hideSidebar();
+  });
+
+  // init state: mobiel -> verborgen, desktop -> zichtbaar
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    hideSidebar();
+  } else {
+    sidebar.classList.remove("hidden");
+    document.body.classList.remove("sidebar-open");
+    showBtn.style.display = "none";
+    sidebar.setAttribute("aria-hidden", "false");
+    showBtn.setAttribute("aria-expanded", "true");
+  }
+
+  // resize: houd state consistent
+  window.addEventListener("resize", () => {
+    if (window.innerWidth <= 768) {
+      if (sidebar.classList.contains("hidden")) {
+        showBtn.style.display = "block";
+        document.body.classList.remove("sidebar-open");
+        sidebar.setAttribute("aria-hidden", "true");
+        showBtn.setAttribute("aria-expanded", "false");
+      } else {
+        showBtn.style.display = "none";
+        document.body.classList.add("sidebar-open");
+        sidebar.setAttribute("aria-hidden", "false");
+        showBtn.setAttribute("aria-expanded", "true");
+      }
+    } else {
+      sidebar.classList.remove("hidden");
+      document.body.classList.remove("sidebar-open");
+      showBtn.style.display = "none";
+      sidebar.setAttribute("aria-hidden", "false");
+      showBtn.setAttribute("aria-expanded", "true");
+    }
+  });
+
+  // --- bestaande init ---
+  buildWeekBlocks();
+  const currentWeek = getISOWeek(today),
+        totalWeeks = getWeeksInYear(currentYear),
+        blockStart = 4 * Math.floor((currentWeek - 1) / 4) + 1,
+        blockEnd = Math.min(blockStart + 3, totalWeeks);
+  loadBlock(blockStart, blockEnd);
+  [...document.querySelectorAll("#week-blocks button")]
+    .forEach(b => { if (b.textContent === `Week ${blockStart}–${blockEnd}`) b.classList.add("active"); });
+});
+
+const names=["THEO","PATRICK","ALEX","OSCAR","WILLEM","THOMAS","DOORTJE","LINDA","NATASCHA"],
+weekdaysNL=["Ma","Di","Wo","Do","Vr","Za","Zo"],
+maandenNL=["Januari","Februari","Maart","April","Mei","Juni","Juli","Augustus","September","Oktober","November","December"],
+today=new Date(),currentYear=today.getFullYear();
+let currentBlock=null;
+
 function adminLogin() {
-  const wachtwoord = "mijngeheim"; // ← verander dit naar je eigen wachtwoord
+  const wachtwoord = "mijngeheim";
   let invoer = prompt("Voer het wachtwoord in:");
   if (invoer === wachtwoord) {
     sessionStorage.setItem("isAdmin", "true");
-    showAdminButtons();
-    enableCellEditing();
-    alert("Beheerder toegang verleend.");
-  } else {
-    alert("Verkeerd wachtwoord.");
-  }
+    showAdminButtons(); enableCellEditing(); alert("Beheerder toegang verleend.");
+  } else alert("Verkeerd wachtwoord.");
 }
-
-function showAdminButtons() {
-  document.querySelectorAll(".admin-only").forEach(btn => btn.style.display = "inline-block");
-}
-
-/* Functie om cellen bewerkbaar te maken */
+function showAdminButtons() { document.querySelectorAll(".admin-only").forEach(btn => btn.style.display = "inline-block"); }
 function enableCellEditing() {
   document.querySelectorAll("#weeks-container td").forEach(td => {
-    if (td.cellIndex === 0) return; // naamkolom overslaan
-    if (td.classList.contains("greyed")) return; // verleden niet bewerken
+    if (td.cellIndex === 0 || td.classList.contains("greyed")) return;
     td.onclick = () => {
       if (td.textContent === "") { td.textContent = "A"; td.className = "A"; }
       else if (td.textContent === "A") { td.textContent = "D"; td.className = "D"; }
@@ -108,24 +294,10 @@ function enableCellEditing() {
     td.oncontextmenu = e => { e.preventDefault(); td.textContent = ""; td.className = ""; };
   });
 }
-
-/* Controle bij opstarten */
-window.addEventListener("DOMContentLoaded", () => {
-  if (sessionStorage.getItem("isAdmin") === "true") {
-    showAdminButtons();
-    enableCellEditing();
-  }
-});
-
-const names=["THEO","PATRICK","ALEX","OSCAR","WILLEM","THOMAS","DOORTJE","LINDA","NATASCHA"],
-weekdaysNL=["Ma","Di","Wo","Do","Vr","Za","Zo"],
-maandenNL=["Januari","Februari","Maart","April","Mei","Juni","Juli","Augustus","September","Oktober","November","December"],
-today=new Date(),currentYear=today.getFullYear();
-let currentBlock=null;
+if (sessionStorage.getItem("isAdmin") === "true") { showAdminButtons(); enableCellEditing(); }
 
 function getISOWeek(e){const t=new Date(e.getTime());t.setHours(0,0,0,0),t.setDate(t.getDate()+3-((t.getDay()+6)%7));const n=new Date(t.getFullYear(),0,4);return 1+Math.round(((t.getTime()-n.getTime())/864e5-3+((n.getDay()+6)%7))/7)}
 function getWeeksInYear(e){return 1===getISOWeek(new Date(e,11,31))?52:53}
-
 function buildWeekBlocks(){
  const e=getWeeksInYear(currentYear),t=getISOWeek(today),n=document.getElementById("week-blocks");
  n.innerHTML="";
@@ -133,174 +305,103 @@ function buildWeekBlocks(){
   const o=Math.min(c+3,e);
   let l=document.createElement("button");
   l.textContent=`Week ${c}–${o}`,o<t&&l.classList.add("past-block"),
-  l.onclick=()=>loadBlock(c,o),n.appendChild(l)
+  l.onclick=()=>{loadBlock(c,o); document.querySelectorAll("#week-blocks button").forEach(btn=>btn.classList.remove("active")); l.classList.add("active");},
+  n.appendChild(l);
  }
 }
-
 function getBlockKey(){return`rooster_${currentYear}_${currentBlock.startWeek}_${currentBlock.endWeek}`}
 function saveBlockData(){
-  if (sessionStorage.getItem("isAdmin") !== "true") {
-    alert("Geen beheerderstoegang. Log in om op te slaan.");
-    return;
-  }
+  if (sessionStorage.getItem("isAdmin") !== "true") { alert("Geen beheerderstoegang. Log in om op te slaan."); return; }
   if(!currentBlock)return;
   const e=[];
   document.querySelectorAll("#weeks-container table").forEach(t=>{
     const n=t.querySelectorAll("tbody tr"),c=[];
-    n.forEach(e=>{
-      const t=Array.from(e.querySelectorAll("td")).map(e=>({text:e.textContent,class:e.className,date:e.dataset.date||""}));
-      c.push(t)
-    }),e.push(c)
-  }),
-  localStorage.setItem(getBlockKey(),JSON.stringify(e)),
-  document.getElementById("save-message").style.display="block",
-  setTimeout(()=>document.getElementById("save-message").style.display="none",2e3)
+    n.forEach(e=>{ const t=Array.from(e.querySelectorAll("td")).map(e=>({text:e.textContent,class:e.className,date:e.dataset.date||""})); c.push(t) });
+    e.push(c);
+  });
+  localStorage.setItem(getBlockKey(),JSON.stringify(e));
+  document.getElementById("save-message").style.display="block";
+  setTimeout(()=>document.getElementById("save-message").style.display="none",2e3);
 }
-
 function loadBlockData(){
- const e=localStorage.getItem(getBlockKey());
- if(!e)return;
+ const e=localStorage.getItem(getBlockKey()); if(!e)return;
  const t=JSON.parse(e);
  document.querySelectorAll("#weeks-container table").forEach((e,n)=>{
   const c=e.querySelectorAll("tbody tr");
   c.forEach((e,c)=>{
    const o=e.querySelectorAll("td");
-   t[n][c].forEach((e,t)=>{
-    o[t].textContent=e.text,o[t].className=e.class,e.date&&(o[t].dataset.date=e.date)
-   })
-  })
- })
- if (sessionStorage.getItem("isAdmin") === "true") {
-   enableCellEditing();
- }
+   t[n][c].forEach((e,t)=>{ o[t].textContent=e.text; o[t].className=e.class; e.date&&(o[t].dataset.date=e.date); });
+  });
+ });
+ if (sessionStorage.getItem("isAdmin") === "true") enableCellEditing();
 }
-
 function loadBlock(e,t){
  currentBlock={startWeek:e,endWeek:t};
- const n=document.getElementById("weeks-container");
- n.innerHTML="";
+ const n=document.getElementById("weeks-container"); n.innerHTML="";
  for(let c=e;c<=t;c++)n.appendChild(buildWeekTable(c));
- loadBlockData();
- toggleClearBtn();
+ loadBlockData(); toggleClearBtn();
 }
-
 function buildWeekTable(e){
- const t=document.createElement("table"),n=document.createElement("thead"),
- c=document.createElement("tr"),o=document.createElement("th");
- o.colSpan=8,o.textContent=`Week ${e}`,c.appendChild(o),n.appendChild(c);
- const l=document.createElement("tr"),a=getDatesForWeek(e,currentYear),
- d=document.createElement("th");d.textContent=maandenNL[a[0].getMonth()],l.appendChild(d);
- a.forEach(e=>{
-  const t=document.createElement("th"),
-        n=weekdaysNL[0===e.getDay()?6:e.getDay()-1],c=e.getDate();
-  t.innerHTML=`<div>${n}</div><div>${c}</div>`,l.appendChild(t)
- }),n.appendChild(l);
+ const t=document.createElement("table"),n=document.createElement("thead"),c=document.createElement("tr"),o=document.createElement("th");
+ o.colSpan=8; o.textContent=`Week ${e}`; c.appendChild(o); n.appendChild(c);
+ const l=document.createElement("tr"),a=getDatesForWeek(e,currentYear),d=document.createElement("th");
+ d.textContent=maandenNL[a[0].getMonth()]; l.appendChild(d);
+ a.forEach(e=>{ const t=document.createElement("th"),n=weekdaysNL[0===e.getDay()?6:e.getDay()-1],c=e.getDate(); t.innerHTML=`<div>${n}</div><div>${c}</div>`; l.appendChild(t); });
+ n.appendChild(l);
  const r=document.createElement("tbody");
- names.forEach((t,n)=>{
-  const c=document.createElement("tr");
-  2===n&&c.classList.add("separator-row");
-  const o=document.createElement("td");o.textContent=t,c.appendChild(o),
-  a.forEach(t=>{
-    const n=document.createElement("td");
-    n.dataset.date=t.toISOString();
-    if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) {
-      n.classList.add("greyed");
-    }
-    // Let op: geen klikfuncties hier tenzij admin
-    c.appendChild(n);
-  });
+ names.forEach((t,n)=>{ const c=document.createElement("tr"); 2===n&&c.classList.add("separator-row");
+  const o=document.createElement("td"); o.textContent=t; c.appendChild(o);
+  a.forEach(t=>{ const n=document.createElement("td"); n.dataset.date=t.toISOString(); if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) n.classList.add("greyed"); c.appendChild(n); });
   r.appendChild(c);
  });
- t.appendChild(n),t.appendChild(r);
- return t;
+ t.appendChild(n); t.appendChild(r); return t;
 }
-
 function getDatesForWeek(e,t){
  const n=new Date(t,0,1+7*(e-1)),c=n.getDay(),o=new Date(n);
  c<=4?o.setDate(n.getDate()-n.getDay()+1):o.setDate(n.getDate()+8-n.getDay());
- const l=[];
- for(let e=0;e<7;e++){const t=new Date(o);t.setDate(t.getDate()+e),l.push(t)}
- return l
+ const l=[]; for(let e=0;e<7;e++){const t=new Date(o);t.setDate(t.getDate()+e);l.push(t);} return l;
 }
-
 function toggleClearBtn(){
  if(!currentBlock)return;
- const e=Array.from(document.querySelectorAll("#weeks-container td")).some(e=>{
-  if(0===e.cellIndex)return!1;
-  const t=e.dataset.date;if(!t)return!1;
-  return new Date(t)>=new Date(today.getFullYear(),today.getMonth(),today.getDate())
- });
- document.getElementById("clear-btn").style.display=e?"inline-block":"none"
+ const e=Array.from(document.querySelectorAll("#weeks-container td")).some(e=>{ if(0===e.cellIndex)return!1; const t=e.dataset.date;if(!t)return!1; return new Date(t)>=new Date(today.getFullYear(),today.getMonth(),today.getDate()) });
+ document.getElementById("clear-btn").style.display=e?"inline-block":"none";
 }
-
-/* Extra beveiliging clear functie */
 function clearFutureShifts(){
-  if (sessionStorage.getItem("isAdmin") !== "true") {
-    alert("Geen beheerderstoegang. Log in om deze functie te gebruiken.");
-    return;
-  }
-  if(!currentBlock)return;
-  if(!confirm("Weet je zeker dat je alle toekomstige shifts wilt wissen?"))return;
+  if (sessionStorage.getItem("isAdmin") !== "true") { alert("Geen beheerderstoegang. Log in om deze functie te gebruiken."); return; }
+  if(!currentBlock)return; if(!confirm("Weet je zeker dat je alle toekomstige shifts wilt wissen?"))return;
   document.querySelectorAll("#weeks-container table").forEach(e=>{
-    const t=parseInt(e.querySelector("th").textContent.split(" ")[1]),
-          n=getDatesForWeek(t,currentYear);
+    const t=parseInt(e.querySelector("th").textContent.split(" ")[1]),n=getDatesForWeek(t,currentYear);
     e.querySelectorAll("tbody tr").forEach(e=>{
-      e.querySelectorAll("td").forEach((e,t)=>{
-        if(0===t)return;
-        const c=n[t-1];
-        c>=new Date(today.getFullYear(),today.getMonth(),today.getDate())&&(e.textContent="",e.className="")
-      })
-    })
+      e.querySelectorAll("td").forEach((e,t)=>{ if(0===t)return; const c=n[t-1]; c>=new Date(today.getFullYear(),today.getMonth(),today.getDate())&&(e.textContent="",e.className="") });
+    });
   });
-  saveBlockData();
-  toggleClearBtn();
+  saveBlockData(); toggleClearBtn();
 }
-
 function openPrintWindowRange(startIndex, endIndex, bwMode) {
   const allTables = Array.from(document.querySelectorAll("#weeks-container table"));
   const tablesToPrint = allTables.slice(startIndex, endIndex + 1);
   const win = window.open("", "_blank");
-  win.document.write(`
-    <html>
-    <head>
-      <title>Print Rooster</title>
-      <style>
-        body{background:#fff;font-family:Arial;margin:0;padding:10px}
-        table{border-collapse:collapse;background:white;border:1px solid #000;margin-bottom:20px}
-        th,td{border:1px solid #ccc;padding:3px;text-align:center}
-        th{background:#eaeaea}
-        .separator-row td{border-bottom:3px solid black!important}
-        td:first-child, th:first-child{width:80px}
-        td:not(:first-child), th:not(:first-child){width:55px}
-        ${bwMode ? `
-          .A, .D, .T { background:#fff !important; color:#000 !important; }
-        ` : `
-          .A{background:red!important;color:#fff!important}
-          .D{background:yellow!important;color:#000!important}
-          .T{background:purple!important;color:#fff!important}
-        `}
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-          color-adjust: exact !important;
-        }
-      </style>
-    </head>
-    <body>
-      ${tablesToPrint.map(t=>t.outerHTML).join("")}
-      <script>window.onload=function(){window.print();}<\/script>
-    </body>
-    </html>
-  `);
+  win.document.write(`<html><head><title>Print Rooster</title><style>
+  body{background:#fff;font-family:Arial;margin:0;padding:10px}
+  table{border-collapse:collapse;background:white;border:1px solid #000;margin-bottom:20px}
+  th,td{border:1px solid #ccc;padding:3px;text-align:center}
+  th{background:#eaeaea}
+  .separator-row td{border-bottom:3px solid black!important}
+  td:first-child, th:first-child{width:80px}
+  td:not(:first-child), th:not(:first-child){width:55px}
+  ${bwMode ? `.A, .D, .T { background:#fff !important; color:#000 !important; }` : `.A{background:red!important;color:#fff!important} .D{background:yellow!important;color:#000!important} .T{background:purple!important;color:#fff!important}`}
+  *{-webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important;}
+  </style></head><body>
+  ${tablesToPrint.map(t=>t.outerHTML).join("")}
+  <script>window.onload=function(){window.print();}<\/script>
+  </body></html>`);
   win.document.close();
 }
-
 function downloadRosterAsPNG(){
  if(!currentBlock)return;
  const allTables = Array.from(document.querySelectorAll("#weeks-container table"));
  const win = window.open("", "_blank");
- win.document.write(`
- <html><head><title>PNG Export</title>
+ win.document.write(`<html><head><title>PNG Export</title>
  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"><\/script>
  <style>
  body{background:#fff;font-family:Arial;margin:0;padding:0}
@@ -324,8 +425,8 @@ function downloadRosterAsPNG(){
  <script>
  window.onload = function(){
    const tables = ${JSON.stringify(allTables.map(t=>t.outerHTML))};
-   document.getElementById("block1").innerHTML = tables[0] + tables[1];
-   document.getElementById("block2").innerHTML = tables[2] + tables[3];
+   document.getElementById("block1").innerHTML = (tables[0]||"") + (tables[1]||"");
+   document.getElementById("block2").innerHTML = (tables[2]||"") + (tables[3]||"");
    function capture(id, filename){
      const el = document.getElementById(id);
      html2canvas(el, {scale:2, backgroundColor: '#fff', useCORS:true}).then(c=>{
@@ -345,11 +446,6 @@ function downloadRosterAsPNG(){
  <\/script></body></html>`);
  win.document.close();
 }
-
-buildWeekBlocks();
-const currentWeek=getISOWeek(today),totalWeeks=getWeeksInYear(currentYear),
-blockStart=4*Math.floor((currentWeek-1)/4)+1,blockEnd=Math.min(blockStart+3,totalWeeks);
-loadBlock(blockStart,blockEnd);
 </script>
 </body>
 </html>
