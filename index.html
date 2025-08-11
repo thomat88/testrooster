@@ -8,9 +8,14 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 :root{
-  /* uniforme rijhoogte – makkelijk aan te passen */
+  /* uniforme rijhoogte */
   --row-h-desktop: 34px;
   --row-h-mobile: 36px;
+  /* naam-teksten (iets kleiner) */
+  --name-fs-desktop: 0.95rem;
+  --name-fs-mobile: 0.85rem;
+  /* donkerder header/labels */
+  --label-color: #111;
 }
 
 body {
@@ -70,7 +75,7 @@ header img { height: 170px; object-fit: cover; }
 #weeks-container { display: flex; flex-wrap: nowrap; }
 table { border-collapse: collapse; background: white; border: 1px solid #000; width: auto; }
 th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
-th { background: #eaeaea; }
+th { background: #eaeaea; color: var(--label-color); }  /* donkerder headers */
 .separator-row td { border-bottom: 3px solid black !important; }
 .A { background: red; color: white; font-weight: bold; }
 .D { background: yellow; color: black; font-weight: bold; }
@@ -84,25 +89,33 @@ td:first-child, th:first-child { width: 80px; }
 td:not(:first-child), th:not(:first-child) { width: 55px; }
 .admin-only { display: none; }
 
-/* ✅ uniforme celhoogte desktop */
+/* Weeknummer-th (eerste rij) net wat sterker */
+thead tr:first-child th { color: var(--label-color); font-weight: 700; }
+
+/* Tweede header-rij (maand + dagen) donkerder en ietsje sterker */
+thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
+
+/* ✅ uniforme celhoogte + compacte naamkolom desktop */
 @media (min-width: 769px) {
   tbody td { height: var(--row-h-desktop); vertical-align: middle; }
-  /* naamkolom niet laten wrappen zodat rijhoogte niet groeit */
   .name-cell {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    color: var(--label-color);         /* donkerder namen */
+    font-size: var(--name-fs-desktop); /* iets kleiner */
+    font-weight: 600;
+    text-align: left;                  /* leest prettiger */
+    padding-left: 6px;
   }
 }
 
 /* Mobiel */
 @media (max-width: 768px) {
-  /* layout/overflow */
   body { flex-direction: column; overflow-x: hidden; }
   #main { padding: 0.5rem; width: 100vw; overflow-x: hidden; }
 
-  /* sticky weekbar voor snelle navigatie */
   .mobile-weekbar {
     position: sticky;
     top: 0;
@@ -117,29 +130,29 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   .mobile-weekbar button, .mobile-weekbar select { height: 38px; }
   .mobile-weekbar select { flex: 1; }
 
-  /* roosters onder elkaar (we tonen er 1 tegelijk via JS) */
   #weeks-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
 
-  /* sidebar als off-canvas */
   #sidebar {
     position: fixed; top: 0; left: 0; height: 100%; width: 180px;
     z-index: 15; background: #f4f4f4; box-shadow: 2px 0 6px rgba(0,0,0,0.2);
   }
 
-  /* tabellen passend maken */
   table {
     width: 100%;
     min-width: 0;
-    table-layout: fixed;     /* verdeelt kolombreedtes netjes */
+    table-layout: fixed;
     font-size: 0.72rem;
   }
   th, td { padding: 2px; }
 
-  /* percentage kolombreedtes -> past altijd in viewport */
+  /* donkerder labels ook op mobiel */
+  th { color: var(--label-color); }
+
+  /* percentage kolombreedtes */
   td:first-child, th:first-child { width: 26% !important; }
   td:not(:first-child), th:not(:first-child) {
     width: calc((100% - 26%) / 7) !important;
@@ -148,18 +161,21 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   /* ✅ uniforme celhoogte mobiel */
   tbody td { height: var(--row-h-mobile); vertical-align: middle; }
 
-  /* naamkolom niet laten wrappen, wel ellipsis zodat het niet uit beeld duwt */
+  /* naamkolom: kleiner, geen wrap, ellipsis, donkerder */
   .name-cell {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 100%;
+    color: var(--label-color);
+    font-size: var(--name-fs-mobile);
+    font-weight: 600;
+    text-align: left;
+    padding-left: 6px;
   }
 
-  /* toon/verberg weken op mobiel */
   table.mobile-hidden { display: none !important; }
 
-  /* agressiever verbergen op mobiel om randjes te voorkomen */
   #sidebar.hidden {
     transform: translateX(-105%);
     opacity: 0;
@@ -173,7 +189,6 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     pointer-events: auto;
   }
 
-  /* Backdrop */
   #backdrop {
     position: fixed;
     inset: 0;
@@ -188,7 +203,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     pointer-events: auto;
   }
 
-  /* ✅ 'Sidebar tonen' knop rechtsonder op mobiel */
+  /* 'Sidebar tonen' knop rechtsonder */
   #show-sidebar {
     position: fixed;
     top: auto;
@@ -207,7 +222,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     width: 220px;
     position: relative;
   }
-  .mobile-weekbar { display: none; } /* alleen mobiel tonen */
+  .mobile-weekbar { display: none; }
 }
 
 /* Print */
@@ -229,7 +244,6 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
 </div>
 
 <div id="main">
-  <!-- MOBIEL: snelle weeknavigatie -->
   <div id="mobile-weekbar" class="mobile-weekbar">
     <button id="prev-week" class="contrast" aria-label="Vorige week">◀︎</button>
     <select id="week-select" aria-label="Kies week"></select>
@@ -259,7 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const showBtn = document.getElementById("show-sidebar");
   const backdrop = document.getElementById("backdrop");
 
-  // mobiele weeknavigatie elementen
   const weekSelect = document.getElementById("week-select");
   const prevBtn = document.getElementById("prev-week");
   const nextBtn = document.getElementById("next-week");
@@ -281,16 +294,13 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebar.setAttribute("aria-hidden", "false");
   }
 
-  // knoppen
   toggleBtn.addEventListener("click", hideSidebar);
   showBtn.addEventListener("click", showSidebar);
 
-  // backdrop klik -> sluiten (mobiel)
   backdrop.addEventListener("click", () => {
     if (window.innerWidth <= 768) hideSidebar();
   });
 
-  // buiten klikken -> sluiten (alleen mobiel)
   document.addEventListener("click", (e) => {
     if (window.innerWidth <= 768 &&
         !sidebar.contains(e.target) &&
@@ -300,7 +310,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // swipe logica voor sidebar
   let touchStartX = 0, touchEndX = 0;
   document.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
@@ -315,7 +324,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dist < -50 && !sidebar.classList.contains("hidden")) hideSidebar();
   });
 
-  // init state: mobiel -> verborgen, desktop -> zichtbaar
   if (window.matchMedia("(max-width: 768px)").matches) {
     hideSidebar();
   } else {
@@ -326,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showBtn.setAttribute("aria-expanded", "true");
   }
 
-  // === Week selector helpers (MOBILE) ===
+  /* === Week selector helpers (MOBILE) === */
   function populateWeekSelect() {
     weekSelect.innerHTML = "";
     if (!currentBlock) return;
@@ -350,11 +358,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isMobile) {
       tables.forEach((t, idx) => {
-        if (idx === activeWeekIndex) {
-          t.classList.remove("mobile-hidden");
-        } else {
-          t.classList.add("mobile-hidden");
-        }
+        if (idx === activeWeekIndex) t.classList.remove("mobile-hidden");
+        else t.classList.add("mobile-hidden");
       });
       if (weekSelect) weekSelect.value = String(activeWeekIndex);
     } else {
@@ -402,7 +407,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // events mobile bar
   prevBtn.addEventListener("click", goToPrevWeek);
   nextBtn.addEventListener("click", goToNextWeek);
   weekSelect.addEventListener("change", (e) => {
@@ -410,7 +414,6 @@ document.addEventListener("DOMContentLoaded", () => {
     goToWeekIndex(i);
   });
 
-  // resize: houd state consistent
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       if (sidebar.classList.contains("hidden")) {
@@ -434,7 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
     applyMobileWeekVisibility();
   });
 
-  // --- bestaande init ---
+  /* --- init --- */
   buildWeekBlocks();
   const currentWeek = getISOWeek(today),
         totalWeeks = getWeeksInYear(currentYear),
@@ -554,8 +557,8 @@ function buildWeekTable(e){
  names.forEach((t,n)=>{ const c=document.createElement("tr"); 2===n&&c.classList.add("separator-row");
   const o=document.createElement("td"); 
   o.textContent=t; 
-  o.classList.add("name-cell");     // ✅ uniforme naamkolom
-  o.title = t;                      // tooltip met volledige naam
+  o.classList.add("name-cell");
+  o.title = t;
   c.appendChild(o);
   a.forEach(t=>{ const n=document.createElement("td"); n.dataset.date=t.toISOString(); if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) n.classList.add("greyed"); c.appendChild(n); });
   r.appendChild(c);
@@ -655,7 +658,7 @@ function downloadRosterAsPNG(){
    }
  }
  <\/script></body></html>`);
- win.document.close();
+  win.document.close();
 }
 </script>
 </body>
