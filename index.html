@@ -84,12 +84,28 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   body { flex-direction: column; overflow-x: hidden; }
   #main { padding: 0.5rem; width: 100vw; overflow-x: hidden; }
 
-  /* roosters onder elkaar + ruimte ertussen */
+  /* sticky weekbar voor snelle navigatie */
+  .mobile-weekbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #fff;
+    padding: .5rem;
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .mobile-weekbar button, .mobile-weekbar select {
+    height: 38px;
+  }
+  .mobile-weekbar select { flex: 1; }
+
+  /* roosters onder elkaar, maar op mobiel tonen we er 1 tegelijk via JS */
   #weeks-container {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex-wrap: nowrap; /* ongebruikt in kolom, maar expliciet */
   }
 
   /* sidebar als off-canvas */
@@ -101,17 +117,20 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   /* tabellen passend maken */
   table {
     width: 100%;
-    min-width: 0;            /* breek min-width van desktop */
-    table-layout: fixed;     /* verdeel kolommen volgens breedte */
-    font-size: 0.72rem;      /* iets compacter */
+    min-width: 0;
+    table-layout: fixed;
+    font-size: 0.72rem;
   }
-  th, td { padding: 2px; }   /* compacter */
+  th, td { padding: 2px; }
 
   /* percentage kolombreedtes -> past altijd in viewport */
   td:first-child, th:first-child { width: 26% !important; }
   td:not(:first-child), th:not(:first-child) {
     width: calc((100% - 26%) / 7) !important;
   }
+
+  /* toon/verberg weken op mobiel */
+  table.mobile-hidden { display: none !important; }
 
   /* agressiever verbergen op mobiel om randjes te voorkomen */
   #sidebar.hidden {
@@ -120,8 +139,6 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     pointer-events: none;
     visibility: hidden;
   }
-
-  /* wanneer open via body state */
   body.sidebar-open #sidebar {
     transform: translateX(0);
     opacity: 1;
@@ -129,7 +146,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     pointer-events: auto;
   }
 
-  /* Donkere laag achter de sidebar (backdrop) */
+  /* Backdrop */
   #backdrop {
     position: fixed;
     inset: 0;
@@ -137,7 +154,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
-    z-index: 10; /* onder sidebar, boven content */
+    z-index: 10;
   }
   body.sidebar-open #backdrop {
     opacity: 1;
@@ -151,12 +168,13 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     width: 220px;
     position: relative;
   }
+  .mobile-weekbar { display: none; } /* alleen mobiel tonen */
 }
 
 /* Print */
 @media print {
   #sidebar, #show-sidebar, #toggle-sidebar,
-  .save-btn, .print-btn, .clear-btn, #backdrop { display: none !important; }
+  .save-btn, .print-btn, .clear-btn, #backdrop, .mobile-weekbar { display: none !important; }
 }
 </style>
 </head>
@@ -172,17 +190,27 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
 </div>
 
 <div id="main">
-<header><img src="casino-be-one-logo.png" alt="Logo"></header>
-<button class="print-btn" onclick="adminLogin()">🔑 Beheerder login</button>
-<button id="clear-btn" class="clear-btn admin-only" onclick="clearFutureShifts()">× Clear Toekomst</button>
-<button class="save-btn admin-only" onclick="saveBlockData()">💾 Opslaan</button>
-<div id="weeks-container"></div>
-<button class="print-btn" onclick="openPrintWindowRange(0,1,false)">🖨 Print kleur W1–2</button>
-<button class="print-btn" onclick="openPrintWindowRange(0,1,true)">🖨 Print zwart-wit W1–2</button>
-<button class="print-btn" onclick="openPrintWindowRange(2,3,false)">🖨 Print kleur W3–4</button>
-<button class="print-btn" onclick="openPrintWindowRange(2,3,true)">🖨 Print zwart-wit W3–4</button>
-<button class="print-btn" onclick="downloadRosterAsPNG()">📸 Download als PNG</button>
-<div id="save-message">Rooster opgeslagen!</div>
+  <!-- ✅ MOBIEL: snelle weeknavigatie -->
+  <div id="mobile-weekbar" class="mobile-weekbar">
+    <button id="prev-week" class="contrast" aria-label="Vorige week">◀︎</button>
+    <select id="week-select" aria-label="Kies week"></select>
+    <button id="next-week" class="contrast" aria-label="Volgende week">▶︎</button>
+  </div>
+
+  <header><img src="casino-be-one-logo.png" alt="Logo"></header>
+
+  <button class="print-btn" onclick="adminLogin()">🔑 Beheerder login</button>
+  <button id="clear-btn" class="clear-btn admin-only" onclick="clearFutureShifts()">× Clear Toekomst</button>
+  <button class="save-btn admin-only" onclick="saveBlockData()">💾 Opslaan</button>
+
+  <div id="weeks-container"></div>
+
+  <button class="print-btn" onclick="openPrintWindowRange(0,1,false)">🖨 Print kleur W1–2</button>
+  <button class="print-btn" onclick="openPrintWindowRange(0,1,true)">🖨 Print zwart-wit W1–2</button>
+  <button class="print-btn" onclick="openPrintWindowRange(2,3,false)">🖨 Print kleur W3–4</button>
+  <button class="print-btn" onclick="openPrintWindowRange(2,3,true)">🖨 Print zwart-wit W3–4</button>
+  <button class="print-btn" onclick="downloadRosterAsPNG()">📸 Download als PNG</button>
+  <div id="save-message">Rooster opgeslagen!</div>
 </div>
 
 <script>
@@ -192,11 +220,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const showBtn = document.getElementById("show-sidebar");
   const backdrop = document.getElementById("backdrop");
 
+  // mobiele weeknavigatie elementen
+  const weekSelect = document.getElementById("week-select");
+  const prevBtn = document.getElementById("prev-week");
+  const nextBtn = document.getElementById("next-week");
+
+  let activeWeekIndex = 0; // 0..3 binnen huidig block
+
   function hideSidebar() {
     sidebar.classList.add("hidden");
     document.body.classList.remove("sidebar-open");
     showBtn.style.display = "block";
-    // ARIA
     showBtn.setAttribute("aria-expanded", "false");
     sidebar.setAttribute("aria-hidden", "true");
   }
@@ -204,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebar.classList.remove("hidden");
     document.body.classList.add("sidebar-open");
     showBtn.style.display = "none";
-    // ARIA
     showBtn.setAttribute("aria-expanded", "true");
     sidebar.setAttribute("aria-hidden", "false");
   }
@@ -213,7 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
   toggleBtn.addEventListener("click", hideSidebar);
   showBtn.addEventListener("click", showSidebar);
 
-  // backdrop klik -> sluiten (mobiel)
   backdrop.addEventListener("click", () => {
     if (window.innerWidth <= 768) hideSidebar();
   });
@@ -228,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // swipe logica
+  // swipe logica voor sidebar
   let touchStartX = 0, touchEndX = 0;
   document.addEventListener("touchstart", (e) => {
     if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
@@ -254,7 +286,95 @@ document.addEventListener("DOMContentLoaded", () => {
     showBtn.setAttribute("aria-expanded", "true");
   }
 
-  // resize: houd state consistent
+  // === Week selector helpers (MOBILE) ===
+  function populateWeekSelect() {
+    weekSelect.innerHTML = "";
+    if (!currentBlock) return;
+    const start = currentBlock.startWeek;
+    const end = currentBlock.endWeek;
+    const weeks = [];
+    for (let w = start; w <= end; w++) weeks.push(w);
+
+    weeks.forEach((w, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = `Week ${w}`;
+      weekSelect.appendChild(opt);
+    });
+    // set default to active index
+    weekSelect.value = String(activeWeekIndex);
+  }
+
+  function applyMobileWeekVisibility() {
+    const tables = Array.from(document.querySelectorAll("#weeks-container table"));
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      tables.forEach((t, idx) => {
+        if (idx === activeWeekIndex) {
+          t.classList.remove("mobile-hidden");
+        } else {
+          t.classList.add("mobile-hidden");
+        }
+      });
+      // nav-select sync
+      if (weekSelect) weekSelect.value = String(activeWeekIndex);
+    } else {
+      tables.forEach(t => t.classList.remove("mobile-hidden"));
+    }
+  }
+
+  function goToWeekIndex(i) {
+    const tablesCount = document.querySelectorAll("#weeks-container table").length;
+    if (tablesCount === 0) return;
+    activeWeekIndex = Math.max(0, Math.min(i, tablesCount - 1));
+    applyMobileWeekVisibility();
+  }
+
+  function goToPrevWeek() {
+    if (activeWeekIndex > 0) {
+      goToWeekIndex(activeWeekIndex - 1);
+    } else {
+      // vorige block laden als mogelijk
+      if (currentBlock && currentBlock.startWeek > 1) {
+        const newEnd = currentBlock.startWeek - 1;
+        const newStart = Math.max(1, newEnd - 3);
+        loadBlock(newStart, newEnd);
+        activeWeekIndex = (newEnd - newStart); // laatste week in nieuwe block
+        populateWeekSelect();
+        applyMobileWeekVisibility();
+      }
+    }
+  }
+  function goToNextWeek() {
+    const tablesCount = document.querySelectorAll("#weeks-container table").length;
+    if (activeWeekIndex < tablesCount - 1) {
+      goToWeekIndex(activeWeekIndex + 1);
+    } else {
+      // volgend block laden als mogelijk
+      if (currentBlock) {
+        const totalWeeks = getWeeksInYear(currentYear);
+        if (currentBlock.endWeek < totalWeeks) {
+          const newStart = currentBlock.endWeek + 1;
+          const newEnd = Math.min(newStart + 3, totalWeeks);
+          loadBlock(newStart, newEnd);
+          activeWeekIndex = 0; // eerste week in nieuwe block
+          populateWeekSelect();
+          applyMobileWeekVisibility();
+        }
+      }
+    }
+  }
+
+  // events mobile bar
+  prevBtn.addEventListener("click", goToPrevWeek);
+  nextBtn.addEventListener("click", goToNextWeek);
+  weekSelect.addEventListener("change", (e) => {
+    const i = parseInt(e.target.value, 10);
+    goToWeekIndex(i);
+  });
+
+  // resize: houd sidebar state en mobiele weekweergave consistent
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       if (sidebar.classList.contains("hidden")) {
@@ -275,6 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sidebar.setAttribute("aria-hidden", "false");
       showBtn.setAttribute("aria-expanded", "true");
     }
+    applyMobileWeekVisibility();
   });
 
   // --- bestaande init ---
@@ -283,9 +404,17 @@ document.addEventListener("DOMContentLoaded", () => {
         totalWeeks = getWeeksInYear(currentYear),
         blockStart = 4 * Math.floor((currentWeek - 1) / 4) + 1,
         blockEnd = Math.min(blockStart + 3, totalWeeks);
+
   loadBlock(blockStart, blockEnd);
+  activeWeekIndex = 0;
+  populateWeekSelect();
+  applyMobileWeekVisibility();
+
   [...document.querySelectorAll("#week-blocks button")]
     .forEach(b => { if (b.textContent === `Week ${blockStart}–${blockEnd}`) b.classList.add("active"); });
+
+  // Expose helpers to block buttons via closure
+  window.__mobileWeekHelpers = { populateWeekSelect, applyMobileWeekVisibility, goToWeekIndex };
 });
 
 const names=["THEO","PATRICK","ALEX","OSCAR","WILLEM","THOMAS","DOORTJE","LINDA","NATASCHA"],
@@ -319,6 +448,7 @@ if (sessionStorage.getItem("isAdmin") === "true") { showAdminButtons(); enableCe
 
 function getISOWeek(e){const t=new Date(e.getTime());t.setHours(0,0,0,0),t.setDate(t.getDate()+3-((t.getDay()+6)%7));const n=new Date(t.getFullYear(),0,4);return 1+Math.round(((t.getTime()-n.getTime())/864e5-3+((n.getDay()+6)%7))/7)}
 function getWeeksInYear(e){return 1===getISOWeek(new Date(e,11,31))?52:53}
+
 function buildWeekBlocks(){
  const e=getWeeksInYear(currentYear),t=getISOWeek(today),n=document.getElementById("week-blocks");
  n.innerHTML="";
@@ -326,11 +456,25 @@ function buildWeekBlocks(){
   const o=Math.min(c+3,e);
   let l=document.createElement("button");
   l.textContent=`Week ${c}–${o}`,o<t&&l.classList.add("past-block"),
-  l.onclick=()=>{loadBlock(c,o); document.querySelectorAll("#week-blocks button").forEach(btn=>btn.classList.remove("active")); l.classList.add("active");},
+  l.onclick=()=>{loadBlock(c,o);
+    // reset active state styling
+    document.querySelectorAll("#week-blocks button").forEach(btn=>btn.classList.remove("active"));
+    l.classList.add("active");
+    // mobiel: reset naar eerste week en update selector/zichtbaarheid
+    if (window.innerWidth <= 768) {
+      if (window.__mobileWeekHelpers) {
+        window.__mobileWeekHelpers.goToWeekIndex(0);
+        window.__mobileWeekHelpers.populateWeekSelect();
+        window.__mobileWeekHelpers.applyMobileWeekVisibility();
+      }
+    }
+  };
   n.appendChild(l);
  }
 }
+
 function getBlockKey(){return`rooster_${currentYear}_${currentBlock.startWeek}_${currentBlock.endWeek}`}
+
 function saveBlockData(){
   if (sessionStorage.getItem("isAdmin") !== "true") { alert("Geen beheerderstoegang. Log in om op te slaan."); return; }
   if(!currentBlock)return;
@@ -344,6 +488,7 @@ function saveBlockData(){
   document.getElementById("save-message").style.display="block";
   setTimeout(()=>document.getElementById("save-message").style.display="none",2e3);
 }
+
 function loadBlockData(){
  const e=localStorage.getItem(getBlockKey()); if(!e)return;
  const t=JSON.parse(e);
@@ -356,12 +501,15 @@ function loadBlockData(){
  });
  if (sessionStorage.getItem("isAdmin") === "true") enableCellEditing();
 }
+
 function loadBlock(e,t){
  currentBlock={startWeek:e,endWeek:t};
  const n=document.getElementById("weeks-container"); n.innerHTML="";
  for(let c=e;c<=t;c++)n.appendChild(buildWeekTable(c));
- loadBlockData(); toggleClearBtn();
+ loadBlockData();
+ toggleClearBtn();
 }
+
 function buildWeekTable(e){
  const t=document.createElement("table"),n=document.createElement("thead"),c=document.createElement("tr"),o=document.createElement("th");
  o.colSpan=8; o.textContent=`Week ${e}`; c.appendChild(o); n.appendChild(c);
@@ -377,16 +525,19 @@ function buildWeekTable(e){
  });
  t.appendChild(n); t.appendChild(r); return t;
 }
+
 function getDatesForWeek(e,t){
  const n=new Date(t,0,1+7*(e-1)),c=n.getDay(),o=new Date(n);
  c<=4?o.setDate(n.getDate()-n.getDay()+1):o.setDate(n.getDate()+8-n.getDay());
  const l=[]; for(let e=0;e<7;e++){const t=new Date(o);t.setDate(t.getDate()+e);l.push(t);} return l;
 }
+
 function toggleClearBtn(){
  if(!currentBlock)return;
  const e=Array.from(document.querySelectorAll("#weeks-container td")).some(e=>{ if(0===e.cellIndex)return!1; const t=e.dataset.date;if(!t)return!1; return new Date(t)>=new Date(today.getFullYear(),today.getMonth(),today.getDate()) });
  document.getElementById("clear-btn").style.display=e?"inline-block":"none";
 }
+
 function clearFutureShifts(){
   if (sessionStorage.getItem("isAdmin") !== "true") { alert("Geen beheerderstoegang. Log in om deze functie te gebruiken."); return; }
   if(!currentBlock)return; if(!confirm("Weet je zeker dat je alle toekomstige shifts wilt wissen?"))return;
@@ -398,6 +549,7 @@ function clearFutureShifts(){
   });
   saveBlockData(); toggleClearBtn();
 }
+
 function openPrintWindowRange(startIndex, endIndex, bwMode) {
   const allTables = Array.from(document.querySelectorAll("#weeks-container table"));
   const tablesToPrint = allTables.slice(startIndex, endIndex + 1);
@@ -418,6 +570,7 @@ function openPrintWindowRange(startIndex, endIndex, bwMode) {
   </body></html>`);
   win.document.close();
 }
+
 function downloadRosterAsPNG(){
  if(!currentBlock)return;
  const allTables = Array.from(document.querySelectorAll("#weeks-container table"));
