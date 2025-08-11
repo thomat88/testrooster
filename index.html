@@ -60,6 +60,7 @@ header img { height: 170px; object-fit: cover; }
 }
 .save-btn { background: #007bff; color: white; }
 .print-btn { background: #555; color: white; }
+
 #weeks-container { display: flex; flex-wrap: nowrap; }
 table { border-collapse: collapse; background: white; border: 1px solid #000; }
 th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
@@ -79,18 +80,38 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
 
 /* Mobiel */
 @media (max-width: 768px) {
-  /* voorkom horizontaal schuiven wanneer de sidebar in/uit schuift */
+  /* layout/overflow */
   body { flex-direction: column; overflow-x: hidden; }
+  #main { padding: 0.5rem; width: 100vw; overflow-x: hidden; }
 
+  /* roosters onder elkaar + ruimte ertussen */
+  #weeks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-wrap: nowrap; /* ongebruikt in kolom, maar expliciet */
+  }
+
+  /* sidebar als off-canvas */
   #sidebar {
     position: fixed; top: 0; left: 0; height: 100%; width: 180px;
     z-index: 15; background: #f4f4f4; box-shadow: 2px 0 6px rgba(0,0,0,0.2);
   }
 
-  /* main altijd volle breedte */
-  #main { padding: 0.5rem; width: 100vw; }
+  /* tabellen passend maken */
+  table {
+    width: 100%;
+    min-width: 0;            /* breek min-width van desktop */
+    table-layout: fixed;     /* verdeel kolommen volgens breedte */
+    font-size: 0.72rem;      /* iets compacter */
+  }
+  th, td { padding: 2px; }   /* compacter */
 
-  table { font-size: 0.8rem; min-width: 600px; }
+  /* percentage kolombreedtes -> past altijd in viewport */
+  td:first-child, th:first-child { width: 26% !important; }
+  td:not(:first-child), th:not(:first-child) {
+    width: calc((100% - 26%) / 7) !important;
+  }
 
   /* agressiever verbergen op mobiel om randjes te voorkomen */
   #sidebar.hidden {
