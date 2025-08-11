@@ -96,12 +96,10 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     align-items: center;
     border-bottom: 1px solid #e5e5e5;
   }
-  .mobile-weekbar button, .mobile-weekbar select {
-    height: 38px;
-  }
+  .mobile-weekbar button, .mobile-weekbar select { height: 38px; }
   .mobile-weekbar select { flex: 1; }
 
-  /* roosters onder elkaar, maar op mobiel tonen we er 1 tegelijk via JS */
+  /* roosters onder elkaar (we tonen er 1 tegelijk via JS) */
   #weeks-container {
     display: flex;
     flex-direction: column;
@@ -160,6 +158,18 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     opacity: 1;
     pointer-events: auto;
   }
+
+  /* ✅ 'Sidebar tonen' knop rechtsonder op mobiel */
+  #show-sidebar {
+    position: fixed;
+    top: auto;
+    left: auto;
+    right: calc(0.9rem + env(safe-area-inset-right, 0px));
+    bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+    padding: 0.5rem 0.8rem;
+    border-radius: 999px;
+  }
 }
 
 /* Desktop */
@@ -190,7 +200,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
 </div>
 
 <div id="main">
-  <!-- ✅ MOBIEL: snelle weeknavigatie -->
+  <!-- MOBIEL: snelle weeknavigatie -->
   <div id="mobile-weekbar" class="mobile-weekbar">
     <button id="prev-week" class="contrast" aria-label="Vorige week">◀︎</button>
     <select id="week-select" aria-label="Kies week"></select>
@@ -246,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
   toggleBtn.addEventListener("click", hideSidebar);
   showBtn.addEventListener("click", showSidebar);
 
+  // backdrop klik -> sluiten (mobiel)
   backdrop.addEventListener("click", () => {
     if (window.innerWidth <= 768) hideSidebar();
   });
@@ -301,7 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
       opt.textContent = `Week ${w}`;
       weekSelect.appendChild(opt);
     });
-    // set default to active index
     weekSelect.value = String(activeWeekIndex);
   }
 
@@ -317,7 +327,6 @@ document.addEventListener("DOMContentLoaded", () => {
           t.classList.add("mobile-hidden");
         }
       });
-      // nav-select sync
       if (weekSelect) weekSelect.value = String(activeWeekIndex);
     } else {
       tables.forEach(t => t.classList.remove("mobile-hidden"));
@@ -335,12 +344,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeWeekIndex > 0) {
       goToWeekIndex(activeWeekIndex - 1);
     } else {
-      // vorige block laden als mogelijk
       if (currentBlock && currentBlock.startWeek > 1) {
         const newEnd = currentBlock.startWeek - 1;
         const newStart = Math.max(1, newEnd - 3);
         loadBlock(newStart, newEnd);
-        activeWeekIndex = (newEnd - newStart); // laatste week in nieuwe block
+        activeWeekIndex = (newEnd - newStart);
         populateWeekSelect();
         applyMobileWeekVisibility();
       }
@@ -351,14 +359,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (activeWeekIndex < tablesCount - 1) {
       goToWeekIndex(activeWeekIndex + 1);
     } else {
-      // volgend block laden als mogelijk
       if (currentBlock) {
         const totalWeeks = getWeeksInYear(currentYear);
         if (currentBlock.endWeek < totalWeeks) {
           const newStart = currentBlock.endWeek + 1;
           const newEnd = Math.min(newStart + 3, totalWeeks);
           loadBlock(newStart, newEnd);
-          activeWeekIndex = 0; // eerste week in nieuwe block
+          activeWeekIndex = 0;
           populateWeekSelect();
           applyMobileWeekVisibility();
         }
@@ -374,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
     goToWeekIndex(i);
   });
 
-  // resize: houd sidebar state en mobiele weekweergave consistent
+  // resize: houd state consistent
   window.addEventListener("resize", () => {
     if (window.innerWidth <= 768) {
       if (sidebar.classList.contains("hidden")) {
@@ -413,7 +420,6 @@ document.addEventListener("DOMContentLoaded", () => {
   [...document.querySelectorAll("#week-blocks button")]
     .forEach(b => { if (b.textContent === `Week ${blockStart}–${blockEnd}`) b.classList.add("active"); });
 
-  // Expose helpers to block buttons via closure
   window.__mobileWeekHelpers = { populateWeekSelect, applyMobileWeekVisibility, goToWeekIndex };
 });
 
@@ -457,10 +463,8 @@ function buildWeekBlocks(){
   let l=document.createElement("button");
   l.textContent=`Week ${c}–${o}`,o<t&&l.classList.add("past-block"),
   l.onclick=()=>{loadBlock(c,o);
-    // reset active state styling
     document.querySelectorAll("#week-blocks button").forEach(btn=>btn.classList.remove("active"));
     l.classList.add("active");
-    // mobiel: reset naar eerste week en update selector/zichtbaarheid
     if (window.innerWidth <= 768) {
       if (window.__mobileWeekHelpers) {
         window.__mobileWeekHelpers.goToWeekIndex(0);
