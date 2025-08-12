@@ -8,106 +8,69 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 :root{
-  /* uniforme rijhoogte */
   --row-h-desktop: 34px;
   --row-h-mobile: 36px;
-  /* naam-teksten (iets kleiner) */
-  --name-fs-desktop: 0.95rem;
-  --name-fs-mobile: 0.85rem;
-  /* donkerder header/labels */
+  /* iets kleiner dan vorige versie */
+  --name-fs-desktop: 0.9rem;
+  --name-fs-mobile: 0.80rem;
   --label-color: #111;
 }
 
-body {
-  margin: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: row;
-}
+body { margin: 0; height: 100vh; display: flex; flex-direction: row; }
 #sidebar {
-  background: #f4f4f4;
-  border-right: 1px solid #ccc;
-  padding: 1rem;
-  overflow-y: auto;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  transform: translateX(0);
+  background: #f4f4f4; border-right: 1px solid #ccc; padding: 1rem;
+  overflow-y: auto; transition: transform 0.3s ease, opacity 0.3s ease; transform: translateX(0);
 }
 #sidebar button { width: 100%; margin-bottom: .5rem; }
 #sidebar button.past-block { background: #ddd !important; color: #777 !important; }
-#sidebar.hidden {
-  transform: translateX(-100%);
-  opacity: 0;
-  pointer-events: none;
-}
-#toggle-sidebar {
-  background: #007bff; color: white; border: none; padding: 0.5rem 1rem; width: 100%;
-}
+#sidebar.hidden { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+#toggle-sidebar { background: #007bff; color: white; border: none; padding: 0.5rem 1rem; width: 100%; }
 #show-sidebar {
-  position: fixed;
-  top: 1rem;
-  left: 1rem;
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 20;
-  display: none;
+  position: fixed; top: 1rem; left: 1rem; background: #007bff; color: white;
+  border: none; padding: 0.6rem 1rem; border-radius: 5px; cursor: pointer; z-index: 20; display: none;
 }
 #main { flex: 1; display: flex; flex-direction: column; overflow-x: auto; padding: 1rem; }
-header {
-  background: #fff; border-bottom: 1px solid #ccc; padding: .5rem;
-  height: 170px; display: flex; align-items: center;
-}
+header { background: #fff; border-bottom: 1px solid #ccc; padding: .5rem; height: 170px; display: flex; align-items: center; }
 header img { height: 170px; object-fit: cover; }
-.clear-btn {
-  background: black; color: white; font-weight: bold; padding: 4px 10px;
-  border: none; cursor: pointer; margin: .5rem 0;
-}
-.save-btn, .print-btn {
-  font-weight: bold; width: 100%; padding: 10px; border: none;
-  cursor: pointer; margin-top: 10px; font-size: 1rem;
-}
+.clear-btn { background: black; color: white; font-weight: bold; padding: 4px 10px; border: none; cursor: pointer; margin: .5rem 0; }
+.save-btn, .print-btn { font-weight: bold; width: 100%; padding: 10px; border: none; cursor: pointer; margin-top: 10px; font-size: 1rem; }
 .save-btn { background: #007bff; color: white; }
 .print-btn { background: #555; color: white; }
 
 #weeks-container { display: flex; flex-wrap: nowrap; }
 table { border-collapse: collapse; background: white; border: 1px solid #000; width: auto; }
 th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
-th { background: #eaeaea; color: var(--label-color); }  /* donkerder headers */
+th { background: #eaeaea; color: var(--label-color); }
+thead tr:first-child th { color: var(--label-color); font-weight: 700; }
+thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
 .separator-row td { border-bottom: 3px solid black !important; }
 .A { background: red; color: white; font-weight: bold; }
 .D { background: yellow; color: black; font-weight: bold; }
 .T { background: purple; color: white; font-weight: bold; }
 .greyed { background: #f0f0f0; color: #888; }
-#save-message {
-  background: #28a745; color: white; padding: 8px; margin-top: 5px;
-  text-align: center; display: none;
-}
+#save-message { background: #28a745; color: white; padding: 8px; margin-top: 5px; text-align: center; display: none; }
 td:first-child, th:first-child { width: 80px; }
 td:not(:first-child), th:not(:first-child) { width: 55px; }
 .admin-only { display: none; }
 
-/* Weeknummer-th (eerste rij) net wat sterker */
-thead tr:first-child th { color: var(--label-color); font-weight: 700; }
-
-/* Tweede header-rij (maand + dagen) donkerder en ietsje sterker */
-thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
-
-/* ✅ uniforme celhoogte + compacte naamkolom desktop */
+/* Desktop: uniforme cellen + compacte naam */
 @media (min-width: 769px) {
   tbody td { height: var(--row-h-desktop); vertical-align: middle; }
   .name-cell {
-    white-space: nowrap;
+    color: var(--label-color);
+    font-size: var(--name-fs-desktop);
+    font-weight: 600;
+    text-align: left;
+    padding-left: 6px;
+  }
+  /* betrouwbare ellipsis binnen de cel */
+  .name-label {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: keep-all;
     max-width: 100%;
-    color: var(--label-color);         /* donkerder namen */
-    font-size: var(--name-fs-desktop); /* iets kleiner */
-    font-weight: 600;
-    text-align: left;                  /* leest prettiger */
-    padding-left: 6px;
   }
 }
 
@@ -117,111 +80,73 @@ thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
   #main { padding: 0.5rem; width: 100vw; overflow-x: hidden; }
 
   .mobile-weekbar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-    background: #fff;
-    padding: .5rem;
-    display: flex;
-    gap: .5rem;
-    align-items: center;
-    border-bottom: 1px solid #e5e5e5;
+    position: sticky; top: 0; z-index: 5; background: #fff; padding: .5rem;
+    display: flex; gap: .5rem; align-items: center; border-bottom: 1px solid #e5e5e5;
   }
   .mobile-weekbar button, .mobile-weekbar select { height: 38px; }
   .mobile-weekbar select { flex: 1; }
 
-  #weeks-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
+  #weeks-container { display: flex; flex-direction: column; gap: 12px; }
 
   #sidebar {
     position: fixed; top: 0; left: 0; height: 100%; width: 180px;
     z-index: 15; background: #f4f4f4; box-shadow: 2px 0 6px rgba(0,0,0,0.2);
   }
 
-  table {
-    width: 100%;
-    min-width: 0;
-    table-layout: fixed;
-    font-size: 0.72rem;
-  }
+  table { width: 100%; min-width: 0; table-layout: fixed; font-size: 0.72rem; }
   th, td { padding: 2px; }
-
-  /* donkerder labels ook op mobiel */
   th { color: var(--label-color); }
 
-  /* percentage kolombreedtes */
+  /* kolommen in percentages */
   td:first-child, th:first-child { width: 26% !important; }
-  td:not(:first-child), th:not(:first-child) {
-    width: calc((100% - 26%) / 7) !important;
-  }
+  td:not(:first-child), th:not(:first-child) { width: calc((100% - 26%) / 7) !important; }
 
-  /* ✅ uniforme celhoogte mobiel */
+  /* uniforme hoogte + compacte naam */
   tbody td { height: var(--row-h-mobile); vertical-align: middle; }
-
-  /* naamkolom: kleiner, geen wrap, ellipsis, donkerder */
   .name-cell {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
     color: var(--label-color);
-    font-size: var(--name-fs-mobile);
+    font-size: var(--name-fs-mobile);   /* kleiner dan voorheen */
     font-weight: 600;
     text-align: left;
     padding-left: 6px;
   }
+  .name-label {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: keep-all;
+    max-width: 100%;
+  }
 
   table.mobile-hidden { display: none !important; }
 
-  #sidebar.hidden {
-    transform: translateX(-105%);
-    opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-  }
-  body.sidebar-open #sidebar {
-    transform: translateX(0);
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
+  #sidebar.hidden { transform: translateX(-105%); opacity: 0; pointer-events: none; visibility: hidden; }
+  body.sidebar-open #sidebar { transform: translateX(0); opacity: 1; visibility: visible; pointer-events: auto; }
 
   #backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-    z-index: 10;
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s ease; z-index: 10;
   }
-  body.sidebar-open #backdrop {
-    opacity: 1;
-    pointer-events: auto;
-  }
+  body.sidebar-open #backdrop { opacity: 1; pointer-events: auto; }
 
-  /* 'Sidebar tonen' knop rechtsonder */
+  /* ✅ kleinere floating knop rechtsonder zodat hij niets bedekt */
   #show-sidebar {
     position: fixed;
-    top: auto;
-    left: auto;
-    right: calc(0.9rem + env(safe-area-inset-right, 0px));
-    bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
+    top: auto; left: auto;
+    right: calc(1.0rem + env(safe-area-inset-right, 0px));
+    bottom: calc(1.2rem + env(safe-area-inset-bottom, 0px));
     z-index: 40;
-    padding: 0.5rem 0.8rem;
+    padding: 0.35rem 0.6rem;   /* kleiner */
     border-radius: 999px;
+    font-size: 0.85rem;        /* kleiner */
+    line-height: 1;
   }
 }
 
 /* Desktop */
 @media (min-width: 769px) {
-  #sidebar {
-    width: 220px;
-    position: relative;
-  }
+  #sidebar { width: 220px; position: relative; }
   .mobile-weekbar { display: none; }
 }
 
@@ -244,6 +169,7 @@ thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
 </div>
 
 <div id="main">
+  <!-- MOBIEL: snelle weeknavigatie -->
   <div id="mobile-weekbar" class="mobile-weekbar">
     <button id="prev-week" class="contrast" aria-label="Vorige week">◀︎</button>
     <select id="week-select" aria-label="Kies week"></select>
@@ -554,16 +480,25 @@ function buildWeekTable(e){
  a.forEach(e=>{ const t=document.createElement("th"),n=weekdaysNL[0===e.getDay()?6:e.getDay()-1],c=e.getDate(); t.innerHTML=`<div>${n}</div><div>${c}</div>`; l.appendChild(t); });
  n.appendChild(l);
  const r=document.createElement("tbody");
- names.forEach((t,n)=>{ const c=document.createElement("tr"); 2===n&&c.classList.add("separator-row");
-  const o=document.createElement("td"); 
-  o.textContent=t; 
+ names.forEach((t,n)=>{ const c=document.createElement("tr"); if(n===2) c.classList.add("separator-row");
+  const o=document.createElement("td");
   o.classList.add("name-cell");
-  o.title = t;
+  const niceName = toTitleCase(t);
+  o.title = niceName;
+  o.innerHTML = `<span class="name-label">${niceName}</span>`;
   c.appendChild(o);
   a.forEach(t=>{ const n=document.createElement("td"); n.dataset.date=t.toISOString(); if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) n.classList.add("greyed"); c.appendChild(n); });
   r.appendChild(c);
  });
  t.appendChild(n); t.appendChild(r); return t;
+}
+
+function toTitleCase(str){
+  // behoud spaties/strepen, zet letters naar Titelvorm
+  return str.toLowerCase().split(/([\s-]+)/).map(part=>{
+    if (/^[\s-]+$/.test(part)) return part;
+    return part.charAt(0).toUpperCase() + part.slice(1);
+  }).join('');
 }
 
 function getDatesForWeek(e,t){
@@ -658,7 +593,7 @@ function downloadRosterAsPNG(){
    }
  }
  <\/script></body></html>`);
-  win.document.close();
+ win.document.close();
 }
 </script>
 </body>
