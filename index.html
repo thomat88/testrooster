@@ -15,6 +15,22 @@
   --label-color: #111;
 }
 
+/* ✅ consistente rendering overal */
+html, body, table {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* voorkom willekeurige afbreking door lib-css */
+table th, table td {
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  hyphens: manual !important;
+  opacity: 1 !important;      /* geen ‘lichtere’ tekst door lage opacity */
+}
+
 body { margin: 0; height: 100vh; display: flex; flex-direction: row; }
 #sidebar {
   background: #f4f4f4; border-right: 1px solid #ccc; padding: 1rem;
@@ -32,16 +48,15 @@ body { margin: 0; height: 100vh; display: flex; flex-direction: row; }
 header { background: #fff; border-bottom: 1px solid #ccc; padding: .5rem; height: 170px; display: flex; align-items: center; }
 header img { height: 170px; object-fit: cover; }
 .clear-btn { background: black; color: white; font-weight: bold; padding: 4px 10px; border: none; cursor: pointer; margin: .5rem 0; }
-.save-btn, .print-btn { font-weight: bold; width: 100%; padding: 10px; border: none; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+.save-btn, .print-btn { font-weight: 700; width: 100%; padding: 10px; border: none; cursor: pointer; margin-top: 10px; font-size: 1rem; }
 .save-btn { background: #007bff; color: white; }
 .print-btn { background: #555; color: white; }
 
 #weeks-container { display: flex; flex-wrap: nowrap; }
 table { border-collapse: collapse; background: white; border: 1px solid #000; width: auto; }
 th, td { border: 1px solid #ccc; text-align: center; padding: 3px; }
-th { background: #eaeaea; color: var(--label-color); }
-thead tr:first-child th { color: var(--label-color); font-weight: 700; }
-thead tr:nth-child(2) th { color: var(--label-color); font-weight: 600; }
+th { background: #eaeaea; color: var(--label-color); font-weight: 600; }
+thead tr:first-child th { color: var(--label-color); font-weight: 700; } /* Week XX */
 .separator-row td { border-bottom: 3px solid black !important; }
 .A { background: red; color: white; font-weight: bold; }
 .D { background: yellow; color: black; font-weight: bold; }
@@ -52,7 +67,7 @@ td:first-child, th:first-child { width: 80px; }
 td:not(:first-child), th:not(:first-child) { width: 55px; }
 .admin-only { display: none; }
 
-/* Desktop: uniforme cellen + compacte naam */
+/* Desktop: uniforme cellen + naamkolom */
 @media (min-width: 769px) {
   tbody td { height: var(--row-h-desktop); vertical-align: middle; }
   .name-cell {
@@ -61,12 +76,12 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     font-weight: 600;
     text-align: left;
     padding-left: 6px;
-    white-space: nowrap; /* extra zekerheid */
   }
   .name-label{
-    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    word-break: keep-all; max-width:100%;
+    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap !important;
+    word-break: keep-all !important; max-width:100%;
   }
+  .month-name{ white-space:nowrap !important; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
 }
 
 /* Mobiel */
@@ -92,11 +107,11 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   th, td { padding: 2px; }
   th { color: var(--label-color); }
 
-  /* kolommen in percentages (naam iets breder) */
-  td:first-child, th:first-child { width: 28% !important; }
-  td:not(:first-child), th:not(:first-child) { width: calc((100% - 28%) / 7) !important; }
+  /* kolommen in percentages – naam breekt nooit */
+  td:first-child, th:first-child { width: 29% !important; } /* iets ruimer dan 28% */
+  td:not(:first-child), th:not(:first-child) { width: calc((100% - 29%) / 7) !important; }
 
-  /* uniforme hoogte + compacte naam */
+  /* uniforme hoogte + naam */
   tbody td { height: var(--row-h-mobile); vertical-align: middle; }
   .name-cell {
     color: var(--label-color);
@@ -104,12 +119,14 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
     font-weight: 600;
     text-align: left;
     padding-left: 6px;
-    white-space: nowrap; /* extra zekerheid */
   }
   .name-label{
-    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    word-break: keep-all; max-width:100%;
+    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap !important;
+    word-break: keep-all !important; max-width:100%;
   }
+
+  /* maand mag nooit afbreken */
+  .month-name{ white-space:nowrap !important; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
 
   table.mobile-hidden { display: none !important; }
 
@@ -146,14 +163,6 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
 @media print {
   #sidebar, #show-sidebar, #toggle-sidebar,
   .save-btn, .print-btn, .clear-btn, #backdrop, .mobile-weekbar { display: none !important; }
-}
-
-/* --- FIX: forceer geen woordafbreking overal voor de naam --- */
-.name-label{
-  white-space: nowrap !important;
-  overflow-wrap: normal !important;
-  word-break: normal !important;
-  hyphens: none !important;
 }
 </style>
 </head>
@@ -475,10 +484,23 @@ function loadBlock(e,t){
 function buildWeekTable(e){
  const t=document.createElement("table"),n=document.createElement("thead"),c=document.createElement("tr"),o=document.createElement("th");
  o.colSpan=8; o.textContent=`Week ${e}`; c.appendChild(o); n.appendChild(c);
- const l=document.createElement("tr"),a=getDatesForWeek(e,currentYear),d=document.createElement("th");
- d.textContent=maandenNL[a[0].getMonth()]; l.appendChild(d);
- a.forEach(e=>{ const t=document.createElement("th"),n=weekdaysNL[0===e.getDay()?6:e.getDay()-1],c=e.getDate(); t.innerHTML=`<div>${n}</div><div>${c}</div>`; l.appendChild(t); });
+
+ const l=document.createElement("tr"),
+       a=getDatesForWeek(e,currentYear),
+       d=document.createElement("th");
+ d.textContent=maandenNL[a[0].getMonth()];
+ d.classList.add("month-name"); // ✅ no-wrap maand
+ l.appendChild(d);
+
+ a.forEach(e=>{
+   const t=document.createElement("th"),
+         n=weekdaysNL[0===e.getDay()?6:e.getDay()-1],
+         c=e.getDate();
+   t.innerHTML=`<div>${n}</div><div>${c}</div>`;
+   l.appendChild(t);
+ });
  n.appendChild(l);
+
  const r=document.createElement("tbody");
  names.forEach((t,n)=>{ const c=document.createElement("tr"); if(n===2) c.classList.add("separator-row");
   const o=document.createElement("td");
