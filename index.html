@@ -15,20 +15,18 @@
   --label-color: #111;
 }
 
-/* ✅ consistente rendering overal */
+/* consistente rendering */
 html, body, table {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
-
-/* voorkom willekeurige afbreking door lib-css */
 table th, table td {
   word-break: normal !important;
   overflow-wrap: normal !important;
   hyphens: manual !important;
-  opacity: 1 !important;      /* geen ‘lichtere’ tekst door lage opacity */
+  opacity: 1 !important;
 }
 
 body { margin: 0; height: 100vh; display: flex; flex-direction: row; }
@@ -67,21 +65,21 @@ td:first-child, th:first-child { width: 80px; }
 td:not(:first-child), th:not(:first-child) { width: 55px; }
 .admin-only { display: none; }
 
-/* Desktop: uniforme cellen + naamkolom */
+/* Desktop */
 @media (min-width: 769px) {
   tbody td { height: var(--row-h-desktop); vertical-align: middle; }
-  .name-cell {
-    color: var(--label-color);
-    font-size: var(--name-fs-desktop);
-    font-weight: 600;
-    text-align: left;
-    padding-left: 6px;
-  }
+
+  .name-cell { color: var(--label-color); text-align: left; padding-left: 6px; }
   .name-label{
-    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap !important;
-    word-break: keep-all !important; max-width:100%;
+    display:block; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap !important; word-break: keep-all !important; max-width:100%;
+    text-transform: uppercase; font-weight: 600; font-size: var(--name-fs-desktop);
   }
-  .month-name{ white-space:nowrap !important; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
+
+  .month-name{
+    white-space:nowrap !important; overflow:hidden; text-overflow:clip; font-weight:700;
+    text-transform:none !important;
+  }
 }
 
 /* Mobiel */
@@ -107,26 +105,23 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   th, td { padding: 2px; }
   th { color: var(--label-color); }
 
-  /* kolommen in percentages – naam breekt nooit */
-  td:first-child, th:first-child { width: 29% !important; } /* iets ruimer dan 28% */
+  /* kolommen */
+  td:first-child, th:first-child { width: 29% !important; }
   td:not(:first-child), th:not(:first-child) { width: calc((100% - 29%) / 7) !important; }
 
-  /* uniforme hoogte + naam */
   tbody td { height: var(--row-h-mobile); vertical-align: middle; }
-  .name-cell {
-    color: var(--label-color);
-    font-size: var(--name-fs-mobile);
-    font-weight: 600;
-    text-align: left;
-    padding-left: 6px;
-  }
+
+  .name-cell { color: var(--label-color); text-align: left; padding-left: 6px; }
   .name-label{
-    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap !important;
-    word-break: keep-all !important; max-width:100%;
+    display:block; overflow:hidden; text-overflow:ellipsis;
+    white-space:nowrap !important; word-break: keep-all !important; max-width:100%;
+    text-transform: uppercase; font-weight: 600; font-size: var(--name-fs-mobile);
   }
 
-  /* maand mag nooit afbreken */
-  .month-name{ white-space:nowrap !important; overflow:hidden; text-overflow:ellipsis; font-weight:700; }
+  .month-name{
+    white-space:nowrap !important; overflow:hidden; text-overflow:clip;
+    font-weight:700; text-transform:none !important;
+  }
 
   table.mobile-hidden { display: none !important; }
 
@@ -139,7 +134,7 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   }
   body.sidebar-open #backdrop { opacity: 1; pointer-events: auto; }
 
-  /* kleinere floating knop rechtsonder */
+  /* compacte ‘Sidebar tonen’-knop */
   #show-sidebar {
     position: fixed;
     top: auto; left: auto;
@@ -164,6 +159,9 @@ td:not(:first-child), th:not(:first-child) { width: 55px; }
   #sidebar, #show-sidebar, #toggle-sidebar,
   .save-btn, .print-btn, .clear-btn, #backdrop, .mobile-weekbar { display: none !important; }
 }
+
+/* ✅ failsafe: ook als er per ongeluk plain text in de cel staat */
+.name-cell{ text-transform: uppercase; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -392,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const names=["THEO","PATRICK","ALEX","OSCAR","WILLEM","THOMAS","DOORTJE","LINDA","NATASCHA"],
 weekdaysNL=["Ma","Di","Wo","Do","Vr","Za","Zo"],
-maandenNL=["Januari","Februari","Maart","April","Mei","Juni","Juli","Augustus","September","Oktober","November","December"],
+maanden3Cap=["Jan","Feb","Maa","Apr","Mei","Jun","Jul","Aug","Sep","Okt","Nov","Dec"],
 today=new Date(),currentYear=today.getFullYear();
 let currentBlock=null;
 
@@ -446,30 +444,54 @@ function buildWeekBlocks(){
 
 function getBlockKey(){return`rooster_${currentYear}_${currentBlock.startWeek}_${currentBlock.endWeek}`}
 
+/* ✅ Sla alleen dagcellen op; naamkolom (ci===0) wordt genegeerd */
 function saveBlockData(){
   if (sessionStorage.getItem("isAdmin") !== "true") { alert("Geen beheerderstoegang. Log in om op te slaan."); return; }
   if(!currentBlock)return;
-  const e=[];
-  document.querySelectorAll("#weeks-container table").forEach(t=>{
-    const n=t.querySelectorAll("tbody tr"),c=[];
-    n.forEach(e=>{ const t=Array.from(e.querySelectorAll("td")).map(e=>({text:e.textContent,class:e.className,date:e.dataset.date||""})); c.push(t) });
-    e.push(c);
+
+  const payload = [];
+  document.querySelectorAll("#weeks-container table").forEach(table=>{
+    const rows = table.querySelectorAll("tbody tr");
+    const rowsData = [];
+    rows.forEach(tr=>{
+      const cells = Array.from(tr.querySelectorAll("td")).map((td, idx) => {
+        if (idx === 0) return { keep:true }; // placeholder voor naamkolom
+        return { text: td.textContent, class: td.className, date: td.dataset.date || "" };
+      });
+      rowsData.push(cells);
+    });
+    payload.push(rowsData);
   });
-  localStorage.setItem(getBlockKey(),JSON.stringify(e));
-  document.getElementById("save-message").style.display="block";
-  setTimeout(()=>document.getElementById("save-message").style.display="none",2e3);
+
+  localStorage.setItem(getBlockKey(), JSON.stringify(payload));
+  const msg = document.getElementById("save-message");
+  msg.style.display="block";
+  setTimeout(()=> msg.style.display="none", 2000);
 }
 
+/* ✅ Bij laden naamkolom niet overschrijven; behoud 'greyed' tenzij A/D/T aanwezig */
 function loadBlockData(){
- const e=localStorage.getItem(getBlockKey()); if(!e)return;
- const t=JSON.parse(e);
- document.querySelectorAll("#weeks-container table").forEach((e,n)=>{
-  const c=e.querySelectorAll("tbody tr");
-  c.forEach((e,c)=>{
-   const o=e.querySelectorAll("td");
-   t[n][c].forEach((e,t)=>{ o[t].textContent=e.text; o[t].className=e.class; e.date&&(o[t].dataset.date=e.date); });
+ const raw = localStorage.getItem(getBlockKey());
+ if(!raw) return;
+
+ const data = JSON.parse(raw);
+ document.querySelectorAll("#weeks-container table").forEach((table, ti)=>{
+  const bodyRows = table.querySelectorAll("tbody tr");
+  bodyRows.forEach((tr, ri)=>{
+    const tds = tr.querySelectorAll("td");
+    (data[ti]?.[ri] || []).forEach((cell, ci)=>{
+      if (ci === 0) return; // naamkolom overslaan
+      if (!cell) return;
+      tds[ci].textContent = cell.text || "";
+      const savedClass = cell.class || "";
+      if (savedClass === "A" || savedClass === "D" || savedClass === "T") {
+        tds[ci].className = savedClass;  // zet A/D/T
+      } // anders behoud bestaande (bijv. 'greyed')
+      if (cell.date) tds[ci].dataset.date = cell.date;
+    });
   });
  });
+
  if (sessionStorage.getItem("isAdmin") === "true") enableCellEditing();
 }
 
@@ -488,8 +510,8 @@ function buildWeekTable(e){
  const l=document.createElement("tr"),
        a=getDatesForWeek(e,currentYear),
        d=document.createElement("th");
- d.textContent=maandenNL[a[0].getMonth()];
- d.classList.add("month-name"); // ✅ no-wrap maand
+ d.textContent = maanden3Cap[a[0].getMonth()];
+ d.classList.add("month-name");
  l.appendChild(d);
 
  a.forEach(e=>{
@@ -505,21 +527,14 @@ function buildWeekTable(e){
  names.forEach((t,n)=>{ const c=document.createElement("tr"); if(n===2) c.classList.add("separator-row");
   const o=document.createElement("td");
   o.classList.add("name-cell");
-  const niceName = toTitleCase(t);
-  o.title = niceName;
-  o.innerHTML = `<span class="name-label">${niceName}</span>`;
+  const displayName = String(t).toUpperCase();  // altijd uppercase
+  o.title = displayName;
+  o.innerHTML = `<span class="name-label">${displayName}</span>`;
   c.appendChild(o);
   a.forEach(t=>{ const n=document.createElement("td"); n.dataset.date=t.toISOString(); if (t < new Date(today.getFullYear(),today.getMonth(),today.getDate())) n.classList.add("greyed"); c.appendChild(n); });
   r.appendChild(c);
  });
  t.appendChild(n); t.appendChild(r); return t;
-}
-
-function toTitleCase(str){
-  return str.toLowerCase().split(/([\s-]+)/).map(part=>{
-    if (/^[\s-]+$/.test(part)) return part;
-    return part.charAt(0).toUpperCase() + part.slice(1);
-  }).join('');
 }
 
 function getDatesForWeek(e,t){
@@ -614,7 +629,7 @@ function downloadRosterAsPNG(){
    }
  }
  <\/script></body></html>`);
- win.document.close();
+  win.document.close();
 }
 </script>
 </body>
